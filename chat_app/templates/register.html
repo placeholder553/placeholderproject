@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register - Chat</title>
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="text-xl font-bold text-gray-800">Chat</div>
+      <nav class="space-x-4">
+        <a href="/" class="text-gray-700 hover:text-blue-500 font-medium">Home</a>
+		<a href="/register" class="text-gray-700 hover:text-blue-500 font-medium">Register</a>
+        <a href="/login" class="text-gray-700 hover:text-blue-500 font-medium">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Form Area -->
+  <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-md space-y-6">
+      <h2 class="text-center text-2xl font-semibold text-gray-900">Register</h2>
+
+      <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Username -->
+        <div>
+          <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username</label>
+          <input id="{{ form.username.id_for_label }}" type="text" name="{{ form.username.name }}" required
+            class="mt-1 block w-full px-3 py-2 border {% if form.username.errors %}border-red-500{% else %}border-gray-300{% endif %} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Username" value="{{ form.username.value|default:'' }}">
+          {% for error in form.username.errors %}
+            <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Email</label>
+          <input id="{{ form.email.id_for_label }}" type="email" name="{{ form.email.name }}" required
+            class="mt-1 block w-full px-3 py-2 border {% if form.email.errors %}border-red-500{% else %}border-gray-300{% endif %} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Email" value="{{ form.email.value|default:'' }}">
+          {% for error in form.email.errors %}
+            <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <!-- Password 1 -->
+        <div>
+          <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700">Password</label>
+          <input id="{{ form.password1.id_for_label }}" type="password" name="{{ form.password1.name }}" required
+            class="mt-1 block w-full px-3 py-2 border {% if form.password1.errors %}border-red-500{% else %}border-gray-300{% endif %} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Password">
+          {% for error in form.password1.errors %}
+            <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <!-- Password 2 -->
+        <div>
+          <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <input id="{{ form.password2.id_for_label }}" type="password" name="{{ form.password2.name }}" required
+            class="mt-1 block w-full px-3 py-2 border {% if form.password2.errors %}border-red-500{% else %}border-gray-300{% endif %} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Confirm Password">
+          {% for error in form.password2.errors %}
+            <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <!-- Submit -->
+        <div>
+          <button
+            type="submit"
+            class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Register
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+</body>
+</html>
