@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chat</title>
-  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Global Chat Room</title>
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
 
@@ -26,12 +26,29 @@
 
       <!-- Chat Header -->
       <div class="bg-blue-600 text-white p-4 font-semibold">
-        {{ recipient_username }}
+        Global Chat Room
       </div>
 
       <!-- Chat Messages -->
-      <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50">
-        <!-- Messages go here -->
+      <div id="chat-box" class="h-96 overflow-y-auto p-4 space-y-2 bg-gray-50">
+        {% for message in messages %}
+          <div class="flex {% if message.sender.username == request.user.username %}justify-end{% else %}justify-start{% endif %}">
+            <div>
+              <div class="inline-block {% if message.sender.username == request.user.username %}bg-indigo-600 text-white{% else %}bg-gray-300 text-gray-900{% endif %} px-4 py-2 rounded-lg max-w-xs break-words">
+                {% if message.image %}
+                  <div>[{{ message.sender.username }}]:<br>
+                    <img src="{{ message.image }}" class="rounded mb-1 max-w-full h-auto object-contain" style="max-height: 200px;" />
+                  </div>
+                {% else %}
+                  [{{ message.sender.username }}]: {{ message.content }}
+                {% endif %}
+              </div>
+              <div class="text-xs text-gray-500 mt-1 {% if message.sender.username == request.user.username %}text-right{% endif %}">
+                {{ message.timestamp|date:"H:i" }}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
       </div>
 
       <!-- Chat Input -->
@@ -54,9 +71,30 @@
     </div>
   </main>
 
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg hidden transition-opacity duration-300 z-50"></div>
+
+  <!-- Current username for JS -->
+  <script>
+    const currentUsername = "{{ request.user.username|escapejs }}";
+  </script>
+
   <!-- Chat Script -->
   <script>
-    const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/{{ recipient_username }}/');
+    function showToast(message, color = 'bg-green-500') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `fixed top-4 right-4 text-white px-4 py-2 rounded shadow-lg z-50 ${color} opacity-0`;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('opacity-100'), 10);
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+      }, 3000);
+    }
+
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const chatSocket = new WebSocket(protocol + window.location.host + '/ws/chat/');
 
     chatSocket.onmessage = function (e) {
       const data = JSON.parse(e.data);
@@ -72,19 +110,21 @@
 
       meta.classList.add('text-xs', 'text-gray-500', 'mt-1');
 
-      if (sender === "{{ request.user.username }}") {
+      if (sender === currentUsername) {
         messageElement.classList.add('flex', 'justify-end');
         messageContent.classList.add('inline-block', 'bg-indigo-600', 'text-white', 'px-4', 'py-2', 'rounded-lg', 'max-w-xs', 'break-words');
         meta.classList.add('text-right');
       } else {
         messageElement.classList.add('flex', 'justify-start');
         messageContent.classList.add('inline-block', 'bg-gray-300', 'text-gray-900', 'px-4', 'py-2', 'rounded-lg', 'max-w-xs', 'break-words');
+        showToast(`New message from ${sender}`, 'bg-blue-600');
       }
 
       if (imageData) {
         const img = document.createElement('img');
         img.src = imageData;
-        img.classList.add('max-w-xs', 'rounded', 'mb-1');
+        img.classList.add('rounded', 'mb-1', 'max-w-full', 'h-auto', 'object-contain');
+        img.style.maxHeight = '200px';
         messageContent.innerHTML = `[${sender}]:<br/>`;
         messageContent.appendChild(img);
       } else {
@@ -102,7 +142,11 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     };
 
-    document.getElementById('send-button').addEventListener('click', async function () {
+    chatSocket.onerror = function () {
+      showToast('Connection error', 'bg-red-500');
+    };
+
+    document.getElementById('send-button').addEventListener('click', function () {
       const messageInput = document.getElementById('chat-input');
       const imageInput = document.getElementById('image-input');
 
@@ -118,10 +162,12 @@
             'message': message,
             'image': e.target.result
           }));
+          showToast('Message sent!');
         };
         reader.readAsDataURL(file);
       } else {
         chatSocket.send(JSON.stringify({ message }));
+        showToast('Message sent!');
       }
 
       messageInput.value = '';
@@ -133,6 +179,12 @@
         document.getElementById('send-button').click();
       }
     });
+
+    window.onload = () => {
+      const chatBox = document.getElementById('chat-box');
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
   </script>
+
 </body>
 </html>
