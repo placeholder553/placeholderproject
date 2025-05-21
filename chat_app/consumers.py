@@ -11,7 +11,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        # Static room name since URL has no room_name param
+       
         self.room_name = 'global'
         self.room_group_name = f'chat_{self.room_name}'
 
