@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ user.username }}'s Profile</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+
+  <!-- Header -->
+  <header class="bg-white shadow dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="text-xl font-bold text-gray-800 dark:text-gray-100">Chat</div>
+      <nav class="space-x-4 flex items-center">
+        <a href="/" class="text-gray-700 hover:text-blue-500 dark:text-gray-300 dark:hover:text-blue-400 font-medium">Home</a>
+        <a href="/register" class="text-gray-700 hover:text-blue-500 dark:text-gray-300 dark:hover:text-blue-400 font-medium">Register</a>
+        <a href="/chat" class="text-gray-700 hover:text-blue-500 dark:text-gray-300 dark:hover:text-blue-400 font-medium">Chat</a>
+        <a href="/logout" class="text-gray-700 hover:text-red-500 dark:text-gray-300 dark:hover:text-red-400 font-medium">Logout</a>
+        <button id="dark-mode-toggle" aria-label="Toggle Dark Mode"
+          class="ml-6 px-3 py-1 rounded border border-gray-400 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+          Toggle Dark Mode
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Profile Section -->
+  <main class="max-w-4xl mx-auto px-4 py-10">
+    <section class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-6">
+        <!-- Profile Picture -->
+        <div class="flex-shrink-0 mb-4 sm:mb-0">
+          <img src="{{ user.profile.avatar.url }}" alt="User Avatar"
+               class="w-32 h-32 rounded-full object-cover border-4 border-blue-500 shadow" />
+        </div>
+
+        <!-- User Info -->
+        <div>
+          <h2 class="text-2xl font-bold">{{ user.username }}</h2>
+          <p class="text-gray-600 dark:text-gray-300 mt-1">{{ user.email }}</p>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Member since {{ user.date_joined|date:"F j, Y" }}</p>
+
+          <!-- Profile Update Form -->
+          <form action="{% url 'update_profile' %}" method="post" enctype="multipart/form-data" class="mt-6 space-y-4">
+            {% csrf_token %}
+            <div>
+              <label for="avatar" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Change Avatar</label>
+              <input type="file" name="avatar" id="avatar" accept="image/*"
+                     class="mt-1 block w-full text-sm text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700" />
+            </div>
+            <button type="submit"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-sm">
+              Save Changes
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Dark Mode Toggle Script -->
+  <script>
+    const toggleBtn = document.getElementById('dark-mode-toggle');
+    const htmlEl = document.documentElement;
+
+    if (localStorage.getItem('theme') === 'dark') {
+      htmlEl.classList.add('dark');
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      htmlEl.classList.toggle('dark');
+      localStorage.setItem('theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
+    });
+  </script>
+
+</body>
+</html>

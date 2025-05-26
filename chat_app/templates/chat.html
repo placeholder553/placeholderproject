@@ -4,37 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Global Chat Room</title>
-  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
-</head>
-<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="bg-white shadow">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+
+  <script>
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col">
+
+  <header class="bg-white shadow dark:bg-gray-800">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="text-xl font-bold text-gray-800">Chat</div>
-      <nav class="space-x-4">
-        <a href="/" class="text-gray-700 hover:text-blue-500 font-medium">Home</a>
-        <a href="/register" class="text-gray-700 hover:text-blue-500 font-medium">Register</a>
-        <a href="/login" class="text-gray-700 hover:text-blue-500 font-medium">Login</a>
+      <div class="text-xl font-bold text-gray-800 dark:text-gray-100">Chat</div>
+      <nav class="space-x-4 flex items-center">
+        <a href="/" class="text-gray-700 hover:text-blue-500 dark:text-gray-300 dark:hover:text-blue-400 font-medium">Home</a>
+        <a href="/register" class="text-gray-700 hover:text-blue-500 dark:text-gray-300 dark:hover:text-blue-400 font-medium">Register</a>
+        <a href="/profile" class="text-gray-700 hover:text-blue-500 dark:text-gray-300 dark:hover:text-blue-400 font-medium">Profile</a>
+        <a href="/logout" class="text-gray-700 hover:text-red-500 dark:text-gray-300 dark:hover:text-red-400 font-medium">Logout</a>
+        <button id="dark-mode-toggle" aria-label="Toggle Dark Mode"
+          class="ml-6 px-3 py-1 rounded border border-gray-400 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+          Toggle Dark Mode
+        </button>
       </nav>
     </div>
   </header>
 
-  <!-- Chat Container -->
   <main class="flex-grow py-10 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-[36rem]">
+    <div class="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex h-[36rem]">
 
-      <!-- Chat Header -->
-      <div class="bg-blue-600 text-white p-4 font-semibold">
-        Global Chat Room
-      </div>
+      <emoji-picker
+        id="emoji-picker"
+        class="w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-600 shadow-lg z-50 hidden"
+      ></emoji-picker>
 
-      <!-- Chat Messages -->
-      <div id="chat-box" class="h-96 overflow-y-auto p-4 space-y-2 bg-gray-50">
-        {% for message in messages %}
-          <div class="flex {% if message.sender.username == request.user.username %}justify-end{% else %}justify-start{% endif %}">
+      <div class="flex-1 flex flex-col">
+        <div class="bg-blue-600 text-white p-4 font-semibold">Global Chat Room</div>
+
+        <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50 dark:bg-gray-700">
+          {% for message in messages %}
+          <div class="flex items-start space-x-2 {% if message.sender.username == request.user.username %}justify-end space-x-reverse{% else %}justify-start{% endif %}">
+            
+            {% if message.sender.username != request.user.username %}
+              <img src="{{ message.sender.profile.avatar.url }}?{{ message.sender.profile.avatar_updated_at.timestamp|default:"0" }}" alt="{{ message.sender.username }}'s avatar" class="w-8 h-8 rounded-full object-cover" />
+            {% endif %}
+            
             <div>
-              <div class="inline-block {% if message.sender.username == request.user.username %}bg-indigo-600 text-white{% else %}bg-gray-300 text-gray-900{% endif %} px-4 py-2 rounded-lg max-w-xs break-words">
+              <div class="inline-block {% if message.sender.username == request.user.username %}bg-indigo-600 text-white{% else %}bg-gray-300 text-gray-900 dark:bg-gray-600 dark:text-gray-100{% endif %} px-4 py-2 rounded-lg max-w-xs break-words">
                 {% if message.image %}
                   <div>[{{ message.sender.username }}]:<br>
                     <img src="{{ message.image }}" class="rounded mb-1 max-w-full h-auto object-contain" style="max-height: 200px;" />
@@ -43,44 +64,119 @@
                   [{{ message.sender.username }}]: {{ message.content }}
                 {% endif %}
               </div>
-              <div class="text-xs text-gray-500 mt-1 {% if message.sender.username == request.user.username %}text-right{% endif %}">
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 {% if message.sender.username == request.user.username %}text-right{% endif %}">
                 {{ message.timestamp|date:"H:i" }}
               </div>
             </div>
-          </div>
-        {% endfor %}
-      </div>
 
-      <!-- Chat Input -->
-      <div class="border-t border-gray-200 p-4 space-y-2">
-        <input
-          id="chat-input"
-          type="text"
-          placeholder="Type your message..."
-          class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-        <div class="flex items-center justify-between">
-          <input id="image-input" type="file" accept="image/*" class="text-sm text-gray-500" />
-          <button id="send-button"
-            class="ml-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
-            Send
-          </button>
+            {% if message.sender.username == request.user.username %}
+              <img src="{{ message.sender.profile.avatar.url }}?{{ message.sender.profile.avatar_updated_at.timestamp|default:"0" }}" alt="{{ message.sender.username }}'s avatar" class="w-8 h-8 rounded-full object-cover" />
+            {% endif %}
+            
+          </div>
+          {% endfor %}
+        </div>
+
+        <div id="typing-indicator" class="text-sm text-gray-500 dark:text-gray-400 px-4 pb-2 hidden">Someone is typing...</div>
+
+        <div class="border-t border-gray-200 dark:border-gray-600 p-4 space-y-2 flex flex-col">
+          <div class="flex items-center space-x-2">
+            <button id="emoji-button" class="px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 text-xl">😊</button>
+
+            <input
+              id="chat-input"
+              type="text"
+              placeholder="Type your message..."
+              class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+            />
+          </div>
+
+          <div class="flex items-center justify-between">
+            <input id="image-input" type="file" accept="image/*" class="text-sm text-gray-500 dark:text-gray-400" />
+            <button id="send-button" class="ml-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm">Send</button>
+          </div>
         </div>
       </div>
 
+      <div class="w-64 border-l border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-4 overflow-y-auto">
+        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Users Online</h2>
+        <ul id="user-list" class="space-y-1 text-sm text-gray-800 dark:text-gray-200"></ul>
+      </div>
     </div>
   </main>
 
-  <!-- Toast Notification -->
   <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg hidden transition-opacity duration-300 z-50"></div>
 
-  <!-- Current username for JS -->
+
   <script>
     const currentUsername = "{{ request.user.username|escapejs }}";
+    let typingTimer;
+    let isTyping = false;
   </script>
 
   <!-- Chat Script -->
   <script>
+    const emojiButton = document.getElementById('emoji-button');
+    const emojiPicker = document.getElementById('emoji-picker');
+    const chatInput = document.getElementById('chat-input');
+
+    emojiButton.addEventListener('click', () => {
+      emojiPicker.classList.toggle('hidden');
+    });
+
+    emojiPicker.addEventListener('emoji-click', event => {
+      chatInput.value += event.detail.unicode;
+      emojiPicker.classList.add('hidden');
+      chatInput.focus();
+    });
+
+    const emojiMap = {
+      ':)': '😊',
+      ':-)': '😊',
+      ':(': '😞',
+      ':-(': '😞',
+      ':D': '😄',
+      ':-D': '😄',
+      ':P': '😛',
+      ':-P': '😛',
+      ';)': '😉',
+      ';-)': '😉',
+      ':o': '😮',
+      ':-o': '😮',
+      ':O': '😮',
+      ':-O': '😮',
+      ':|': '😐',
+      ':-|': '😐',
+      ':*': '😘',
+      ':-*': '😘',
+      '<3': '❤️',
+      ':cool:': '😎',
+      ':cry:': '😢',
+      ':angry:': '😠'
+    };
+
+    function emojiAutocorrect(value) {
+      let newValue = value;
+      for (const [key, emoji] of Object.entries(emojiMap)) {
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedKey, 'g');
+        newValue = newValue.replace(regex, emoji);
+      }
+      return newValue;
+    }
+
+    chatInput.addEventListener('input', (e) => {
+      const cursorPos = chatInput.selectionStart;
+      const originalLength = chatInput.value.length;
+      const newValue = emojiAutocorrect(chatInput.value);
+
+      if (newValue !== chatInput.value) {
+        chatInput.value = newValue;
+        const diff = newValue.length - originalLength;
+        chatInput.selectionStart = chatInput.selectionEnd = cursorPos + diff;
+      }
+    });
+
     function showToast(message, color = 'bg-green-500') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -95,96 +191,173 @@
 
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     const chatSocket = new WebSocket(protocol + window.location.host + '/ws/chat/');
+    const userList = document.getElementById("user-list");
 
     chatSocket.onmessage = function (e) {
       const data = JSON.parse(e.data);
       const message = data['message'];
       const sender = data['sender'];
       const imageData = data['image'];
+      const typing = data['typing'];
+      const users = data['users'];
+      const avatarUrl = data['avatar'] || '/media/avatars/default.png';
+
       const chatBox = document.getElementById('chat-box');
+      const typingIndicator = document.getElementById('typing-indicator');
 
-      const messageElement = document.createElement('div');
-      const messageContent = document.createElement('div');
-      const meta = document.createElement('div');
-      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      meta.classList.add('text-xs', 'text-gray-500', 'mt-1');
-
-      if (sender === currentUsername) {
-        messageElement.classList.add('flex', 'justify-end');
-        messageContent.classList.add('inline-block', 'bg-indigo-600', 'text-white', 'px-4', 'py-2', 'rounded-lg', 'max-w-xs', 'break-words');
-        meta.classList.add('text-right');
-      } else {
-        messageElement.classList.add('flex', 'justify-start');
-        messageContent.classList.add('inline-block', 'bg-gray-300', 'text-gray-900', 'px-4', 'py-2', 'rounded-lg', 'max-w-xs', 'break-words');
-        showToast(`New message from ${sender}`, 'bg-blue-600');
+      if (Array.isArray(users)) {
+        userList.innerHTML = '';
+        users.forEach(username => {
+          const li = document.createElement('li');
+          li.textContent = username;
+          userList.appendChild(li);
+        });
+        return;
       }
 
-      if (imageData) {
-        const img = document.createElement('img');
-        img.src = imageData;
-        img.classList.add('rounded', 'mb-1', 'max-w-full', 'h-auto', 'object-contain');
-        img.style.maxHeight = '200px';
-        messageContent.innerHTML = `[${sender}]:<br/>`;
-        messageContent.appendChild(img);
-      } else {
-        messageContent.textContent = `[${sender}]: ${message}`;
+      if (typing && sender !== currentUsername) {
+        typingIndicator.textContent = `${sender} is typing...`;
+        typingIndicator.classList.remove('hidden');
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+          typingIndicator.classList.add('hidden');
+        }, 2000);
+        return;
       }
 
-      meta.textContent = timestamp;
+      if (message) {
+        typingIndicator.classList.add('hidden');
 
-      const wrapper = document.createElement('div');
-      wrapper.appendChild(messageContent);
-      wrapper.appendChild(meta);
+        const messageWrapper = document.createElement('div');
+        messageWrapper.className = 'flex items-start space-x-2';
 
-      messageElement.appendChild(wrapper);
-      chatBox.appendChild(messageElement);
-      chatBox.scrollTop = chatBox.scrollHeight;
+        if (sender === currentUsername) {
+          messageWrapper.classList.add('justify-end', 'space-x-reverse');
+        } else {
+          messageWrapper.classList.add('justify-start');
+        }
+
+        // Avatar img with cache buster
+        const avatarImg = document.createElement('img');
+        avatarImg.src = avatarUrl;
+        avatarImg.alt = sender + "'s avatar";
+        avatarImg.className = 'w-8 h-8 rounded-full object-cover';
+
+        if (sender === currentUsername) {
+          messageWrapper.appendChild(document.createElement('div'));
+        } else {
+          messageWrapper.appendChild(avatarImg);
+        }
+
+        const messageContent = document.createElement('div');
+        const bubble = document.createElement('div');
+        bubble.className = sender === currentUsername
+          ? 'bg-indigo-600 text-white px-4 py-2 rounded-lg max-w-xs break-words'
+          : 'bg-gray-300 text-gray-900 dark:bg-gray-600 dark:text-gray-100 px-4 py-2 rounded-lg max-w-xs break-words';
+
+        if (imageData) {
+          const imgTag = document.createElement('img');
+          imgTag.src = imageData;
+          imgTag.className = 'rounded mb-1 max-w-full h-auto object-contain';
+          imgTag.style.maxHeight = '200px';
+
+          bubble.innerHTML = `[${sender}]:<br>`;
+          bubble.appendChild(imgTag);
+        } else {
+          bubble.textContent = `[${sender}]: ${message}`;
+        }
+
+        messageContent.appendChild(bubble);
+
+        const timestamp = document.createElement('div');
+        timestamp.className = sender === currentUsername ? 'text-xs text-gray-500 dark:text-gray-400 mt-1 text-right' : 'text-xs text-gray-500 dark:text-gray-400 mt-1';
+        timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        messageContent.appendChild(timestamp);
+
+        messageWrapper.appendChild(messageContent);
+
+        if (sender === currentUsername) {
+          messageWrapper.appendChild(avatarImg);
+        } else {
+          messageWrapper.appendChild(document.createElement('div'));
+        }
+
+        chatBox.appendChild(messageWrapper);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    };
+
+    chatSocket.onopen = function () {
+      showToast('Connected to chat', 'bg-green-500');
+    };
+
+    chatSocket.onclose = function () {
+      showToast('Disconnected from chat', 'bg-red-500');
     };
 
     chatSocket.onerror = function () {
-      showToast('Connection error', 'bg-red-500');
+      showToast('WebSocket error', 'bg-red-500');
     };
 
-    document.getElementById('send-button').addEventListener('click', function () {
-      const messageInput = document.getElementById('chat-input');
+    document.getElementById('send-button').onclick = () => {
+      const message = chatInput.value.trim();
       const imageInput = document.getElementById('image-input');
+      if (!message && !imageInput.files.length) {
+        return;
+      }
 
-      const message = messageInput.value.trim();
-      const file = imageInput.files[0];
-
-      if (!message && !file) return;
-
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
+      const reader = new FileReader();
+      if (imageInput.files.length > 0) {
+        reader.onload = function () {
           chatSocket.send(JSON.stringify({
             'message': message,
-            'image': e.target.result
+            'image': reader.result,
+            'typing': false
           }));
-          showToast('Message sent!');
+          chatInput.value = '';
+          imageInput.value = '';
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(imageInput.files[0]);
       } else {
-        chatSocket.send(JSON.stringify({ message }));
-        showToast('Message sent!');
+        chatSocket.send(JSON.stringify({
+          'message': message,
+          'typing': false
+        }));
+        chatInput.value = '';
       }
-
-      messageInput.value = '';
-      imageInput.value = '';
-    });
-
-    document.getElementById('chat-input').addEventListener('keyup', function (e) {
-      if (e.key === 'Enter') {
-        document.getElementById('send-button').click();
-      }
-    });
-
-    window.onload = () => {
-      const chatBox = document.getElementById('chat-box');
-      chatBox.scrollTop = chatBox.scrollHeight;
     };
-  </script>
 
+    chatInput.addEventListener('input', () => {
+      if (!isTyping) {
+        isTyping = true;
+        chatSocket.send(JSON.stringify({ 'typing': true }));
+      }
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        isTyping = false;
+        chatSocket.send(JSON.stringify({ 'typing': false }));
+      }, 1000);
+    });
+
+    // Dark mode toggle
+    document.getElementById('dark-mode-toggle').addEventListener('click', () => {
+      const htmlEl = document.documentElement;
+      if (htmlEl.classList.contains('dark')) {
+        htmlEl.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        htmlEl.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+
+    chatInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault(); // prevent newline in input
+    document.getElementById('send-button').click();
+  }
+});
+  </script>
 </body>
 </html>
